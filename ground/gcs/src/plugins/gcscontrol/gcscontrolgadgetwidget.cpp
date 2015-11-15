@@ -52,7 +52,8 @@ GCSControlGadgetWidget::GCSControlGadgetWidget(QWidget *parent) : QLabel(parent)
     UAVObject::Metadata mdata = manualControlCommand->getMetadata();
     m_gcscontrol->checkBoxGcsControl->setChecked(UAVObject::GetFlightAccess(mdata) == UAVObject::ACCESS_READONLY);
 
-    // Set up the drop down box for the flightmode
+    // Set up the drop down box for the
+
     // TODO: update this with named modes based on current configuration
     m_gcscontrol->comboBoxFlightMode->addItem("Sw pos 1");
     m_gcscontrol->comboBoxFlightMode->addItem("Sw pos 2");
@@ -212,6 +213,10 @@ void GCSControlGadgetWidget::setArmed(bool newState)
 bool GCSControlGadgetWidget::getArmed(void)
 {
     return m_gcscontrol->checkBoxArming->isChecked();
+}
+void GCSControlGadgetWidget::setFlightMode(int mode)
+{
+    m_gcscontrol->comboBoxFlightMode->setCurrentIndex(mode);
 }
 
 

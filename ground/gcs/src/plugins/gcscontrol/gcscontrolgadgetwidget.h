@@ -47,6 +47,7 @@ public:
     bool getUDPControl(void);
     void setArmed(bool newState);
     bool getArmed(void);
+    void setFlightMode(int mode);
 
 signals:
     void sticksChanged(double leftX, double leftY, double rightX, double rightY);

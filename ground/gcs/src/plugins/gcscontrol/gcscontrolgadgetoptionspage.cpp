@@ -28,7 +28,7 @@
 #include "gcscontrolgadgetoptionspage.h"
 #include "gcscontrolgadgetconfiguration.h"
 #include "ui_gcscontrolgadgetoptionspage.h"
-
+#include <iostream>
 #include <QFileDialog>
 #include <QtAlgorithms>
 #include <QStringList>
@@ -149,7 +149,7 @@ QWidget *GCSControlGadgetOptionsPage::createPage(QWidget *parent)
         options_page->buttonAction4 << options_page->buttonAction5 <<
         options_page->buttonAction6 << options_page->buttonAction7;
     QStringList buttonActionOptions;
-    buttonActionOptions << "Does nothing" << "Increases" << "Decreases" << "Toggles";
+    buttonActionOptions << "Does nothing" << "Increases" << "Decreases" << "Toggles" <<"Sets";
     foreach(QComboBox * qb, buttonActionList) {
         qb->addItems(buttonActionOptions);
     }
@@ -169,11 +169,12 @@ QWidget *GCSControlGadgetOptionsPage::createPage(QWidget *parent)
     for (i = 0; i < 8; i++) {
         buttonActionList.at(i)->setCurrentIndex(m_config->getbuttonSettings(i).ActionID);
         buttonFunctionList.at(i)->setCurrentIndex(m_config->getbuttonSettings(i).FunctionID);
+        updateButtonAction(i);
         buttonValueList.at(i)->setValue(m_config->getbuttonSettings(i).Amount);
-
+        qDebug() <<m_config->getbuttonSettings(i).Amount;
         connect(buttonFunctionList.at(i), SIGNAL(currentIndexChanged(int)), this, SLOT(updateButtonFunction()));
         // connect(buttonActionList.at(i),SIGNAL(currentIndexChanged(int)),this,SLOT(updateButtonActions[i]()));
-        updateButtonAction(i);
+
         buttonFunctionList.at(i)->setCurrentIndex(m_config->getbuttonSettings(i).FunctionID);
     }
     connect(buttonActionList.at(0), SIGNAL(currentIndexChanged(int)), this, SLOT(updateButtonAction_0()));
@@ -320,10 +321,22 @@ void GCSControlGadgetOptionsPage::updateButtonFunction()
             buttonFunctionList.at(i)->setVisible(1);
             buttonLabelList.at(i)->setVisible(0);
             buttonValueList.at(i)->setVisible(0);
-        } else {
+        } else if(buttonActionList.at(i)->currentText().compare("Sets") == 0){
             buttonFunctionList.at(i)->setVisible(1);
             buttonLabelList.at(i)->setVisible(1);
             buttonValueList.at(i)->setVisible(1);
+            buttonValueList.at(i)->setMinimum(1);
+            buttonValueList.at(i)->setMaximum(6);
+            buttonValueList.at(i)->setDecimals(0);
+
+        } else {
+
+            buttonFunctionList.at(i)->setVisible(1);
+            buttonLabelList.at(i)->setVisible(1);
+            buttonValueList.at(i)->setVisible(1);
+            buttonValueList.at(i)->setMinimum(0.00);
+            buttonValueList.at(i)->setMaximum(1.00);
+            buttonValueList.at(i)->setDecimals(2);
         }
     }
 }
@@ -370,6 +383,19 @@ void GCSControlGadgetOptionsPage::updateButtonAction(int controlID)
             buttonFunctionList.at(i)->setVisible(1);
             buttonLabelList.at(i)->setVisible(0);
             buttonValueList.at(i)->setVisible(0);
+            connect(buttonFunctionList.at(i), SIGNAL(currentIndexChanged(int)), this, SLOT(updateButtonFunction()));
+        } else if (buttonActionList.at(i)->currentText().compare("Sets") == 0) {
+            disconnect(buttonFunctionList.at(i), SIGNAL(currentIndexChanged(int)), this, SLOT(updateButtonFunction()));
+            buttonOptions << "-" << "Armed" << "GCS Control" << "UDP Control" <<"Flight Mode";
+            buttonFunctionList.at(i)->clear();
+            buttonFunctionList.at(i)->insertItems(-1, buttonOptions);
+
+            buttonFunctionList.at(i)->setVisible(1);
+            buttonLabelList.at(i)->setVisible(1);
+            buttonValueList.at(i)->setVisible(1);
+            buttonValueList.at(i)->setMaximum(6);
+            buttonValueList.at(i)->setMinimum(1);
+            buttonValueList.at(i)->setDecimals(0);
             connect(buttonFunctionList.at(i), SIGNAL(currentIndexChanged(int)), this, SLOT(updateButtonFunction()));
         } else {
             disconnect(buttonFunctionList.at(i), SIGNAL(currentIndexChanged(int)), this, SLOT(updateButtonFunction()));

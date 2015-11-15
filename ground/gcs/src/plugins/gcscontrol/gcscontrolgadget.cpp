@@ -363,6 +363,7 @@ void GCSControlGadget::buttonState(ButtonNumber number, bool pressed)
                     manualControlCommand->getField("Throttle")->setValue(bound(manualControlCommand->getField("Throttle")->getValue().toDouble() + buttonSettings[number].Amount));
                     manualControlCommand->getField("Thrust")->setValue(bound(manualControlCommand->getField("Thrust")->getValue().toDouble() + buttonSettings[number].Amount));
                     break;
+
                 }
             }
             break;
@@ -382,7 +383,7 @@ void GCSControlGadget::buttonState(ButtonNumber number, bool pressed)
                     manualControlCommand->getField("Throttle")->setValue(bound(manualControlCommand->getField("Throttle")->getValue().toDouble() - buttonSettings[number].Amount));
                     manualControlCommand->getField("Thrust")->setValue(bound(manualControlCommand->getField("Thrust")->getValue().toDouble() - buttonSettings[number].Amount));
                     break;
-                }
+                     }
             }
             break;
         case 3: // toggle
@@ -409,6 +410,21 @@ void GCSControlGadget::buttonState(ButtonNumber number, bool pressed)
                 break;
             }
 
+            break;
+        case 4: //SET
+            if (currentCGSControl) {
+                switch (buttonSettings[number].FunctionID) {
+                case 4:
+                    int amount = buttonSettings[number].Amount;
+                    if((amount>0)&&(amount<6))
+                    {
+                        ((GCSControlGadgetWidget *)m_widget)->setFlightMode(amount-1);
+                    }
+                        //manualControlCommand->getField("Throttle")->setValue(bound(manualControlCommand->getField("Throttle")->getValue().toDouble() - buttonSettings[number].Amount));
+                break;
+                    break;
+                     }
+            }
             break;
         }
 
