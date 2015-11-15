@@ -171,7 +171,6 @@ QWidget *GCSControlGadgetOptionsPage::createPage(QWidget *parent)
         buttonFunctionList.at(i)->setCurrentIndex(m_config->getbuttonSettings(i).FunctionID);
         updateButtonAction(i);
         buttonValueList.at(i)->setValue(m_config->getbuttonSettings(i).Amount);
-        qDebug() <<m_config->getbuttonSettings(i).Amount;
         connect(buttonFunctionList.at(i), SIGNAL(currentIndexChanged(int)), this, SLOT(updateButtonFunction()));
         // connect(buttonActionList.at(i),SIGNAL(currentIndexChanged(int)),this,SLOT(updateButtonActions[i]()));
 
@@ -406,6 +405,9 @@ void GCSControlGadgetOptionsPage::updateButtonAction(int controlID)
             buttonFunctionList.at(i)->setVisible(1);
             buttonLabelList.at(i)->setVisible(1);
             buttonValueList.at(i)->setVisible(1);
+            buttonValueList.at(i)->setMaximum(0.00);
+            buttonValueList.at(i)->setMinimum(1.00);
+            buttonValueList.at(i)->setDecimals(2);
             connect(buttonFunctionList.at(i), SIGNAL(currentIndexChanged(int)), this, SLOT(updateButtonFunction()));
         }
     }
