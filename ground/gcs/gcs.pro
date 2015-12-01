@@ -19,7 +19,7 @@ macx {
     # This ensures that code is compiled with the /usr/bin version of gcc instead
     # of the gcc in XCode.app/Context/Development
     QMAKE_CC = /usr/bin/gcc
-    QMAKE_CXX = /usr/bin/g++ 
+    QMAKE_CXX = ccache /usr/bin/g++ 
     QMAKE_LINK = /usr/bin/g++
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6
 }
