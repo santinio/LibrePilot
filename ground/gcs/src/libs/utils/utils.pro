@@ -1,7 +1,7 @@
 TEMPLATE = lib
 TARGET = Utils
 
-QT += network xml svg opengl gui widgets qml quick quickwidgets
+QT += network xml svg gui widgets qml quick quickwidgets
 
 DEFINES += QTCREATOR_UTILS_LIB
 
@@ -13,7 +13,7 @@ DEFINES += PLUGIN_REL_PATH=$$shell_quote(\"$$relative_path($$GCS_PLUGIN_PATH, $$
 
 SOURCES += \
     reloadpromptutils.cpp \
-    settingsutils.cpp \
+    stringutils.cpp \
     filesearch.cpp \
     pathchooser.cpp \
     pathlisteditor.cpp \
@@ -52,13 +52,13 @@ SOURCES += \
     mytabbedstackwidget.cpp \
     mytabwidget.cpp \
     quickwidgetproxy.cpp \
-    cachedsvgitem.cpp \
     svgimageprovider.cpp \
     hostosinfo.cpp \
     logfile.cpp \
     crc.cpp \
     mustache.cpp \
     textbubbleslider.cpp
+
 
 SOURCES += xmlconfig.cpp
 
@@ -74,7 +74,7 @@ else:SOURCES += consoleprocess_unix.cpp
 HEADERS += \
     utils_global.h \
     reloadpromptutils.h \
-    settingsutils.h \
+    stringutils.h \
     filesearch.h \
     listutils.h \
     pathchooser.h \
@@ -116,7 +116,6 @@ HEADERS += \
     mytabbedstackwidget.h \
     mytabwidget.h \
     quickwidgetproxy.h \
-    cachedsvgitem.h \
     svgimageprovider.h \
     hostosinfo.h \
     logfile.h \

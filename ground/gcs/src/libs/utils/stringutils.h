@@ -1,10 +1,14 @@
 /**
  ******************************************************************************
  *
- * @file       cachedsvgitem.h
- * @author     Dmytro Poplavskiy Copyright (C) 2011.
+ * @file       stringutils.h
+ * @author     The LibrePilot Project, http://www.librepilot.org Copyright (C) 2015.
+ *             Parts by Nokia Corporation (qt-info@nokia.com) Copyright (C) 2009.
+ * @brief
+ * @see        The GNU Public License (GPL) Version 3
+ * @defgroup
  * @{
- * @brief OpenGL texture cached SVG item
+ *
  *****************************************************************************/
 /*
  * This program is free software; you can redistribute it and/or modify
@@ -22,33 +26,24 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef CACHEDSVGITEM_H
-#define CACHEDSVGITEM_H
-
-#include <QGraphicsSvgItem>
-#include <QtOpenGL>
-#include <QtOpenGL/QGLContext>
+#ifndef STRINGUTILS_H
+#define STRINGUTILS_H
 
 #include "utils_global.h"
 
-class QGLContext;
+#include <QString>
 
-// Cache Svg item as GL Texture.
-// Texture is regenerated each time item is scaled
-// but it's reused during rotation, unlike DeviceCoordinateCache mode
-class QTCREATOR_UTILS_EXPORT CachedSvgItem : public QGraphicsSvgItem {
-    Q_OBJECT
-public:
-    CachedSvgItem(QGraphicsItem *parent = 0);
-    CachedSvgItem(const QString & fileName, QGraphicsItem *parent = 0);
-    ~CachedSvgItem();
+namespace Utils {
+/**
+ * Convert a string to lower camel case.
+ * Handles following cases :
+ * - Property -> property
+ * - MyProperty -> myProperty
+ * - MYProperty -> myProperty
+ * - MY_Property -> my_Property
+ * - MY -> my
+ */
+QTCREATOR_UTILS_EXPORT QString toLowerCamelCase(const QString &);
+}
 
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-
-private:
-    QGLContext *m_context;
-    GLuint m_texture;
-    qreal m_scale;
-};
-
-#endif // ifndef CACHEDSVGITEM_H
+#endif /* STRINGUTILS_H */
