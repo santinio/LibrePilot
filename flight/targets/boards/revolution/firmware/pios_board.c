@@ -571,11 +571,13 @@ void PIOS_Board_Init(void)
     } /* hwsettings_rm_flexiport */
 
     /* Moved this here to allow binding on flexiport */
+#if defined(V)
 #if defined(PIOS_INCLUDE_FLASH)
     if (PIOS_FLASHFS_Logfs_Init(&pios_user_fs_id, &flashfs_external_user_cfg, &pios_jedec_flash_driver, flash_id)) {
         PIOS_DEBUG_Assert(0);
     }
 #endif /* if defined(PIOS_INCLUDE_FLASH) */
+#endif /*V*/
 
 #if defined(PIOS_INCLUDE_USB)
     /* Initialize board specific USB data */

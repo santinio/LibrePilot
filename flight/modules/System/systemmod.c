@@ -565,6 +565,7 @@ static void updateStats()
     stats.CPULoad = 100 - PIOS_TASK_MONITOR_GetIdlePercentage();
 
 #if defined(PIOS_INCLUDE_ADC) && defined(PIOS_ADC_USE_TEMP_SENSOR)
+    //TODO Check why this is affected by the voltage CPUTem
     float temp_voltage = PIOS_ADC_PinGetVolt(PIOS_ADC_TEMPERATURE_PIN);
     stats.CPUTemp = PIOS_CONVERT_VOLT_TO_CPU_TEMP(temp_voltage);;
 #endif
