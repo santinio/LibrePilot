@@ -4,10 +4,9 @@
  * @author     The LibrePilot Project, http://www.librepilot.org Copyright (C) 2015.
  *             The OpenPilot Team, http://www.openpilot.org Copyright (C) 2010.
  *             PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
- *
- * @addtogroup OpenPilotSystem OpenPilot System
+ * @addtogroup LibrePilotSystem LibrePilot System
  * @{
- * @addtogroup OpenPilotCore OpenPilot Core
+ * @addtogroup LibrePilotCore LibrePilot Core
  * @{
  * @brief Defines board specific static initializers for hardware for the CopterControl board.
  *****************************************************************************/
@@ -156,9 +155,6 @@ static const struct pios_mpu6000_cfg pios_mpu6000_cfg = {
 int32_t init_test;
 void PIOS_Board_Init(void)
 {
-    /* Delay system */
-    PIOS_DELAY_Init();
-
     const struct pios_board_info *bdinfo = &pios_board_info_blob;
 
 #if defined(PIOS_INCLUDE_LED)
@@ -674,6 +670,53 @@ void PIOS_Board_Init(void)
         }
 #endif /* PIOS_INCLUDE_DSM */
         break;
+
+    case HWSETTINGS_CC_FLEXIPORT_HOTTSUMD:
+    case HWSETTINGS_CC_FLEXIPORT_HOTTSUMH:
+#if defined(PIOS_INCLUDE_HOTT)
+        {
+            uint32_t pios_usart_hott_id;
+            if (PIOS_USART_Init(&pios_usart_hott_id, &pios_usart_hott_flexi_cfg)) {
+                PIOS_Assert(0);
+            }
+
+            uint32_t pios_hott_id;
+            if (PIOS_HOTT_Init(&pios_hott_id, &pios_usart_com_driver, pios_usart_hott_id,
+                               hwsettings_cc_flexiport == HWSETTINGS_CC_FLEXIPORT_HOTTSUMD ? PIOS_HOTT_PROTO_SUMD : PIOS_HOTT_PROTO_SUMH)) {
+                PIOS_Assert(0);
+            }
+
+            uint32_t pios_hott_rcvr_id;
+            if (PIOS_RCVR_Init(&pios_hott_rcvr_id, &pios_hott_rcvr_driver, pios_hott_id)) {
+                PIOS_Assert(0);
+            }
+            pios_rcvr_group_map[MANUALCONTROLSETTINGS_CHANNELGROUPS_HOTT] = pios_hott_rcvr_id;
+        }
+#endif /* PIOS_INCLUDE_HOTT */
+        break;
+
+    case HWSETTINGS_CC_FLEXIPORT_EXBUS:
+#if defined(PIOS_INCLUDE_EXBUS)
+        {
+            uint32_t pios_usart_exbus_id;
+            if (PIOS_USART_Init(&pios_usart_exbus_id, &pios_usart_exbus_flexi_cfg)) {
+                PIOS_Assert(0);
+            }
+
+            uint32_t pios_exbus_id;
+            if (PIOS_EXBUS_Init(&pios_exbus_id, &pios_usart_com_driver, pios_usart_exbus_id)) {
+                PIOS_Assert(0);
+            }
+
+            uint32_t pios_exbus_rcvr_id;
+            if (PIOS_RCVR_Init(&pios_exbus_rcvr_id, &pios_exbus_rcvr_driver, pios_exbus_id)) {
+                PIOS_Assert(0);
+            }
+            pios_rcvr_group_map[MANUALCONTROLSETTINGS_CHANNELGROUPS_EXBUS] = pios_exbus_rcvr_id;
+        }
+#endif /* PIOS_INCLUDE_EXBUS */
+        break;
+
     case HWSETTINGS_CC_FLEXIPORT_SRXL:
 #if defined(PIOS_INCLUDE_SRXL)
         {

@@ -2,8 +2,7 @@
 # copy osg and osgearth libraries and data to build dir
 #
 
-# set debug suffix if needed
-#win32:CONFIG(debug, debug|release):DS = "d"
+OSG_VERSION = 3.5.1
 
 contains(QT_ARCH, x86_64)  {
     LIB_DIR_NAME = lib64
@@ -11,9 +10,8 @@ contains(QT_ARCH, x86_64)  {
     LIB_DIR_NAME = lib
 }
 
-!msys2:OSG_VERSION = 3.4.0
-msys2:OSG_VERSION = 3.5.1
-
+# set debug suffix if needed
+#win32:CONFIG(debug, debug|release):DS = "d"
 
 osg:linux {
     # copy osg libraries
@@ -63,22 +61,14 @@ osg:win32 {
         libssh2-1.dll
 
 
-    # gdal
-    OSG_LIBS += \
-        libgdal-20.dll \
-        libgeos_c.dll \
-        libgeos.dll \
-        libjpeg-8.dll \
-        libtiff-5.dll \
-        liblzma-5.dll \
-        libiconv-2.dll \
-        zlib1.dll
-
     # other
     OSG_LIBS += \
         libproj-9.dll \
         libfreetype-6.dll \
-        libpng16-16.dll
+        libpng16-16.dll \
+        libiconv-2.dll \
+        zlib1.dll
+
 
     # osg libraries
     OSG_LIBS += \
@@ -193,6 +183,15 @@ osgearth:win32 {
         libosgEarthFeatures$${DS}.dll \
         libosgEarthSymbology$${DS}.dll \
         libosgEarthUtil$${DS}.dll
+
+    # gdal
+    OSGEARTH_LIBS += \
+        libgdal-20.dll \
+        libgeos_c.dll \
+        libgeos.dll \
+        libjpeg-8.dll \
+        libtiff-5.dll \
+        liblzma-5.dll
 
     osgearthQt:OSGEARTH_LIBS += \
         libosgEarthQt$${DS}.dll
