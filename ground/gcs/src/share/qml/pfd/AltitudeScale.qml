@@ -1,14 +1,32 @@
+/*
+ * Copyright (C) 2016 The LibrePilot Project
+ * Contact: http://www.librepilot.org
+ *
+ * This file is part of LibrePilot GCS.
+ *
+ * LibrePilot GCS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LibrePilot GCS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LibrePilot GCS.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import QtQuick 2.4
 
-import UAVTalk.PositionState 1.0
-import UAVTalk.NedAccel 1.0
-import UAVTalk.PathDesired 1.0
+import "../common.js" as Utils
+import "../uav.js" as UAV
 
 Item {
     id: sceneItem
     property variant sceneSize
 
-    property real altitude : -qmlWidget.altitudeFactor * positionState.down
+    property real altitude : -qmlWidget.altitudeFactor * UAV.positionStateDown()
 
     SvgElementImage {
         id: altitude_window
@@ -64,7 +82,7 @@ Item {
             elementName: "altitude-vector"
             sceneSize: sceneItem.sceneSize
 
-            height: -nedAccel.down * altitude_scale.height / 10
+            height: -UAV.nedAccelDown() * altitude_scale.height / 10
 
             anchors.left: parent.left
             anchors.bottom: parent.verticalCenter
@@ -74,12 +92,13 @@ Item {
             id: altitude_waypoint
             elementName: "altitude-waypoint"
             sceneSize: sceneItem.sceneSize
-            visible: (pathDesired.endDown != 0.0)
+            visible: (UAV.isFlightModeAssisted() && (UAV.pathDesiredEndDown() != 0.0))
 
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
 
-            anchors.verticalCenterOffset: -altitude_scale.height / 10 * (positionState.Down - pathDesired.endDown) * qmlWidget.altitudeFactor
+            anchors.verticalCenterOffset: -altitude_scale.height / 10 * 
+                                          (UAV.positionStateDown() - UAV.pathDesiredEndDown()) * qmlWidget.altitudeFactor
         }
     }
 
@@ -101,7 +120,7 @@ Item {
 
         Text {
             id: altitude_text
-            text: "  " +altitude.toFixed(1)
+            text: "  " + altitude.toFixed(1)
             color: "white"
             font {
                 family: pt_bold.name

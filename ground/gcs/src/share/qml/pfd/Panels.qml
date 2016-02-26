@@ -1,25 +1,30 @@
+/*
+ * Copyright (C) 2016 The LibrePilot Project
+ * Contact: http://www.librepilot.org
+ *
+ * This file is part of LibrePilot GCS.
+ *
+ * LibrePilot GCS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LibrePilot GCS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LibrePilot GCS.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import QtQuick 2.0
 
-import UAVTalk.SystemSettings 1.0
-import UAVTalk.RevoSettings 1.0
-import UAVTalk.SystemAlarms 1.0
-import UAVTalk.FlightBatteryState 1.0
-import UAVTalk.GPSPositionSensor 1.0
-import UAVTalk.ManualControlCommand 1.0
-import UAVTalk.MagState 1.0
-import UAVTalk.ReceiverStatus 1.0
-import UAVTalk.OPLinkStatus 1.0
-
 import "../common.js" as Utils
+import "../uav.js" as UAV
 
 Item {
     id: panels
     property variant sceneSize
-
-    property real est_flight_time: Math.round(flightBatteryState.estimatedFlightTime)
-    property real est_time_h: (est_flight_time > 0) ? Math.floor(est_flight_time / 3600) : 0
-    property real est_time_m: (est_flight_time > 0) ? Math.floor((est_flight_time - est_time_h * 3600) / 60) : 0
-    property real est_time_s: (est_flight_time > 0) ? Math.floor(est_flight_time - est_time_h * 3600 - est_time_m * 60) : 0
 
     //
     // Panel functions
@@ -78,15 +83,7 @@ Item {
         system_bg.z = 40
     }
 
-    // Uninitialised, Ok, Warning, Critical, Error
-    property variant batColors : ["#2c2929", "green", "orange", "red", "red"]
-
     property real smeter_angle
-
-    property real memory_free : (systemStats.heapRemaining > 1024) ? systemStats.heapRemaining / 1024 : systemStats.heapRemaining
-
-    // Needed to get correctly int8 value
-    property int cpuTemp : systemStats.cpuTemp
 
     // Needed to get correctly int8 value, reset value (-127) on disconnect
     property int oplm0_db: (telemetry_link == 1) ? opLinkStatus.pairSignalStrengths0 : -127
@@ -103,7 +100,7 @@ Item {
     function telemetry_check() {
        telemetry_sum = opLinkStatus.rxRate + opLinkStatus.txRate
 
-       if (telemetry_sum != telemetry_sum_old || (opLinkStatus.linkState == LinkState.Connected)) {
+       if (telemetry_sum != telemetry_sum_old || UAV.isOplmConnected()) {
            telemetry_link = 1
        } else {
            telemetry_link = 0
@@ -451,13 +448,13 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            color: panels.batColors[systemAlarms.alarmBattery]
+            color: UAV.batteryAlarmColor()
             border.color: "white"
             border.width: battery_volt.width * 0.01
             radius: border.width * 4
 
             Text {
-               text: flightBatteryState.voltage.toFixed(2)
+               text: UAV.batteryVoltage()
                anchors.centerIn: parent
                color: "white"
                font {
@@ -492,13 +489,13 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            color: panels.batColors[systemAlarms.alarmBattery]
+            color: UAV.batteryAlarmColor()
             border.color: "white"
             border.width: battery_volt.width * 0.01
             radius: border.width * 4
 
             Text {
-               text: flightBatteryState.current.toFixed(2)
+               text: UAV.batteryCurrent()
                anchors.centerIn: parent
                color: "white"
                font {
@@ -547,16 +544,15 @@ Item {
                onClicked: qmlWidget.resetConsumedEnergy();
             }
 
-            // Alarm based on flightBatteryState.estimatedFlightTime < 120s orange, < 60s red
-            color: (flightBatteryState.estimatedFlightTime <= 120 && flightBatteryState.estimatedFlightTime > 60 ? "orange" :
-                   (flightBatteryState.estimatedFlightTime <= 60 ? "red": panels.batColors[systemAlarms.alarmBattery]))
+            // Alarm based on estimatedFlightTime < 120s orange, < 60s red
+            color: UAV.estimatedTimeAlarmColor()
 
             border.color: "white"
             border.width: battery_volt.width * 0.01
             radius: border.width * 4
 
             Text {
-               text: flightBatteryState.consumedEnergy.toFixed(0)
+               text: UAV.batteryConsumedEnergy()
                anchors.centerIn: parent
                color: "white"
                font {
@@ -591,7 +587,6 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            //color: panels.batColors[systemAlarms.alarmBattery]
 
             TooltipArea {
                text: "Reset consumed energy"
@@ -606,16 +601,15 @@ Item {
                onClicked: qmlWidget.resetConsumedEnergy();
             }
 
-            // Alarm based on flightBatteryState.estimatedFlightTime < 120s orange, < 60s red
-            color: (flightBatteryState.estimatedFlightTime <= 120) && (flightBatteryState.estimatedFlightTime > 60) ? "orange" :
-                   (flightBatteryState.estimatedFlightTime <= 60) ? "red" : panels.batColors[systemAlarms.alarmBattery]
+            // Alarm based on estimatedFlightTime < 120s orange, < 60s red
+            color: UAV.estimatedTimeAlarmColor()
 
             border.color: "white"
             border.width: battery_volt.width * 0.01
             radius: border.width * 4
 
             Text {
-               text: Utils.formatTime(est_time_h) + ":" + Utils.formatTime(est_time_m) + ":" + Utils.formatTime(est_time_s)
+               text: Utils.formatFlightTime(UAV.estimatedFlightTimeValue())
                anchors.centerIn: parent
                color: "white"
                font {
@@ -954,8 +948,62 @@ Item {
         }
 
         Text {
-             text: (receiverStatus.quality > 0) ? receiverStatus.quality + "%" : "?? %"
-             anchors.centerIn: parent
+             text: UAV.receiverQuality()
+             anchors.right: parent.right
+             color: "white"
+             font {
+                 family: pt_bold.name
+                 pixelSize: Math.floor(parent.height * 1.4)
+                 weight: Font.DemiBold
+             }
+        }
+    }
+
+    SvgElementImage {
+        id: cnx_state_label
+        elementName: "cnx-state-label"
+        sceneSize: panels.sceneSize
+        y: Math.floor(scaledBounds.y * sceneItem.height)
+        z: oplm_bg.z + 8
+
+        states: State {
+             name: "fading"
+             when: show_panels == true
+             PropertyChanges { target: cnx_state_label; x: Math.floor(scaledBounds.x * sceneItem.width) + offset_value; }
+        }
+
+        transitions: Transition {
+            SequentialAnimation {
+                PropertyAnimation { property: "x"; easing.type: anim_type; duration: anim_duration }
+            }
+        }
+    }
+
+    SvgElementPositionItem {
+        id: cnx_state_text
+        sceneSize: panels.sceneSize
+        elementName: "cnx-state-text"
+        z: oplm_bg.z + 9
+
+        width: scaledBounds.width * sceneItem.width
+        height: scaledBounds.height * sceneItem.height
+        y: scaledBounds.y * sceneItem.height
+
+        states: State {
+             name: "fading"
+             when: show_panels == true
+             PropertyChanges { target: cnx_state_text; x: Math.floor(scaledBounds.x * sceneItem.width) + offset_value; }
+        }
+
+        transitions: Transition {
+            SequentialAnimation {
+                PropertyAnimation { property: "x"; easing.type: anim_type; duration: anim_duration }
+            }
+        }
+
+        Text {
+             text: UAV.oplmLinkState()
+             anchors.right: parent.right
              color: "white"
              font {
                  family: pt_bold.name
@@ -1004,7 +1052,7 @@ Item {
         id: system_bg
         elementName: "system-bg"
         sceneSize: panels.sceneSize
-        y: Math.floor(scaledBounds.y * sceneItem.height)
+        y: scaledBounds.y * sceneItem.height
         z: 40
 
         states: State {
@@ -1024,7 +1072,7 @@ Item {
         id: system_frametype
         elementName: "system-frame-type"
         sceneSize: panels.sceneSize
-        y: Math.floor(scaledBounds.y * sceneItem.height)
+        y: scaledBounds.y * sceneItem.height
         z: system_bg.z + 1
 
         states: State {
@@ -1040,9 +1088,7 @@ Item {
         }
 
         Text {
-             text: ["FixedWing", "FixedWingElevon", "FixedWingVtail", "VTOL", "HeliCP", "QuadX", "QuadP",
-                    "Hexa+", "Octo+", "Custom", "HexaX", "HexaH", "OctoV", "OctoCoaxP", "OctoCoaxX", "OctoX", "HexaCoax",
-                    "Tricopter", "GroundVehicleCar", "GroundVehicleDiff", "GroundVehicleMoto"][systemSettings.airframeType]
+             text: UAV.frameType()
              anchors.right: parent.right
              color: "white"
              font {
@@ -1057,7 +1103,7 @@ Item {
         id: system_cpuloadtemp
         elementName: "system-cpu-load-temp"
         sceneSize: panels.sceneSize
-        y: Math.floor(scaledBounds.y * sceneItem.height)
+        y: scaledBounds.y * sceneItem.height
         z: system_bg.z + 1
 
         states: State {
@@ -1073,8 +1119,8 @@ Item {
         }
 
         Text {
-             // Coptercontrol detect with mem free : Only display Cpu load, no temperature available.
-             text: systemStats.cpuLoad + "%" + [(systemStats.heapRemaining < 3000) ? "" : " | " + cpuTemp + "°C"]
+             // CC3D: Only display Cpu load, no temperature available.
+             text: UAV.cpuLoad() + "%" + [UAV.isCC3D() ? "" : " | " + UAV.cpuTemp() + "°C"]
              anchors.right: parent.right
              color: "white"
              font {
@@ -1089,7 +1135,7 @@ Item {
         id: system_memfree
         elementName: "system-mem-free"
         sceneSize: panels.sceneSize
-        y: Math.floor(scaledBounds.y * sceneItem.height)
+        y: scaledBounds.y * sceneItem.height
         z: system_bg.z + 1
 
         states: State {
@@ -1105,7 +1151,7 @@ Item {
         }
 
         Text {
-             text: (systemStats.heapRemaining > 1024) ? memory_free.toFixed(2) +"Kb" : memory_free +"bytes"
+             text: UAV.freeMemory()
              anchors.right: parent.right
              color: "white"
              font {
@@ -1120,7 +1166,7 @@ Item {
         id: system_fusion_algo
         elementName: "system-attitude-estimation-algo"
         sceneSize: panels.sceneSize
-        y: Math.floor(scaledBounds.y * sceneItem.height)
+        y: scaledBounds.y * sceneItem.height
         z: system_bg.z + 1
 
         states: State {
@@ -1136,7 +1182,7 @@ Item {
         }
 
         Text {
-             text: ["None", "Basic (No Nav)", "CompMag", "Comp+Mag+GPS", "EKFIndoor", "GPS Nav (INS13)"][revoSettings.fusionAlgorithm]
+             text: UAV.fusionAlgorithm()
              anchors.right: parent.right
              color: "white"
              font {
@@ -1151,7 +1197,7 @@ Item {
         id: system_mag_used
         elementName: "system-mag-used"
         sceneSize: panels.sceneSize
-        y: Math.floor(scaledBounds.y * sceneItem.height)
+        y: scaledBounds.y * sceneItem.height
         z: system_bg.z + 1
 
         states: State {
@@ -1167,7 +1213,7 @@ Item {
         }
 
         Text {
-             text: ["Invalid", "OnBoard", "External"][magState.source]
+             text: UAV.magSourceName()
              anchors.right: parent.right
              color: "white"
              font {
@@ -1182,7 +1228,7 @@ Item {
         id: system_gpstype
         elementName: "system-gps-type"
         sceneSize: panels.sceneSize
-        y: Math.floor(scaledBounds.y * sceneItem.height)
+        y: scaledBounds.y * sceneItem.height
         z: system_bg.z + 1
 
         states: State {
@@ -1198,7 +1244,7 @@ Item {
         }
 
         Text {
-             text: ["Unknown", "NMEA", "UBX", "UBX7", "UBX8"][gpsPositionSensor.sensorType]
+             text: UAV.gpsSensorType()
              anchors.right: parent.right
              color: "white"
              font {

@@ -1,11 +1,28 @@
+/*
+ * Copyright (C) 2016 The LibrePilot Project
+ * Contact: http://www.librepilot.org
+ *
+ * This file is part of LibrePilot GCS.
+ *
+ * LibrePilot GCS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LibrePilot GCS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LibrePilot GCS.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import QtQuick 2.4
+
 import Pfd 1.0
 import OsgQtQuick 1.0
 
-import UAVTalk.AttitudeState 1.0
-import UAVTalk.HomeLocation 1.0
-import UAVTalk.GPSPositionSensor 1.0
-
+import "../common.js" as Utils
 import "../uav.js" as UAV
 
 OSGViewport {
@@ -17,18 +34,8 @@ OSGViewport {
     OSGSkyNode {
         id: skyNode
         sceneData: sceneGroup
-        dateTime: getDateTime()
+        dateTime: Utils.getDateTime()
         minimumAmbientLight: qmlWidget.minimumAmbientLight
-
-        function getDateTime() {
-            switch(qmlWidget.timeMode) {
-            case TimeMode.Local:
-                return new Date();
-            case TimeMode.Predefined:
-                return qmlWidget.dateTime;
-            }
-        }
-
     }
 
     OSGGroup {
