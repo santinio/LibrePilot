@@ -27,24 +27,19 @@
 #ifndef CONFIGREVOWIDGET_H
 #define CONFIGREVOWIDGET_H
 
-#include "ui_revosensors.h"
 #include "configtaskwidget.h"
 #include "extensionsystem/pluginmanager.h"
 #include "uavobjectmanager.h"
 #include "uavobject.h"
+
 #include "calibration/thermal/thermalcalibrationmodel.h"
 #include "calibration/sixpointcalibrationmodel.h"
 #include "calibration/levelcalibrationmodel.h"
 #include "calibration/gyrobiascalibrationmodel.h"
 
-#include <QWidget>
-#include <QtSvg/QSvgRenderer>
-#include <QtSvg/QGraphicsSvgItem>
-#include <QList>
-#include <QTimer>
-#include <QMutex>
+class Ui_RevoSensorsWidget;
 
-class Ui_Widget;
+class QWidget;
 
 class ConfigRevoWidget : public ConfigTaskWidget {
     Q_OBJECT
@@ -67,6 +62,17 @@ private:
     qint16 auxMagStoredBoardRotation[3];
     bool isBoardRotationStored;
 
+    bool displayMagError;
+
+    float onboardMagFiltered[3];
+    float auxMagFiltered[3];
+    float magBe[3];
+
+    int magWarningCount;
+    int magErrorCount;
+    int auxMagWarningCount;
+    int auxMagErrorCount;
+
 private slots:
     void storeAndClearBoardRotation();
     void recallBoardRotation();
@@ -86,6 +92,13 @@ private slots:
 
     void disableAllCalibrations();
     void enableAllCalibrations();
+
+    void onBoardAuxMagError();
+    void updateMagStatus();
+    void updateMagBeVector();
+    void updateMagAlarm(float errorMag, float errorAuxMag);
+
+    float getMagError(float mag[3]);
 
     void updateVisualHelp();
     void openHelp();

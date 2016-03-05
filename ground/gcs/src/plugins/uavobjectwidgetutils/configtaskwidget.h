@@ -27,25 +27,23 @@
 #ifndef CONFIGTASKWIDGET_H
 #define CONFIGTASKWIDGET_H
 
+#include "uavobjectwidgetutils_global.h"
+
 #include "extensionsystem/pluginmanager.h"
-#include "uavobjectmanager.h"
-#include "uavobject.h"
-#include "uavobjectutilmanager.h"
-#include <QQueue>
+
 #include <QWidget>
 #include <QList>
-#include <QLabel>
-#include "smartsavebutton.h"
-#include "mixercurvewidget.h"
-#include <QTableWidget>
-#include <QDoubleSpinBox>
-#include <QSpinBox>
-#include <QCheckBox>
-#include <QPushButton>
-#include "uavobjectwidgetutils_global.h"
-#include <QDesktopServices>
-#include <QUrl>
-#include <QEvent>
+#include <QVariant>
+
+class UAVObject;
+class UAVObjectField;
+class UAVObjectManager;
+class UAVObjectUtilManager;
+class SmartSaveButton;
+
+class QComboBox;
+class QPushButton;
+class QEvent;
 
 class ShadowWidgetBinding : public QObject {
     Q_OBJECT
@@ -241,7 +239,7 @@ private:
     void connectWidgetUpdatesToSlot(QWidget *widget, const char *function);
     void disconnectWidgetUpdatesToSlot(QWidget *widget, const char *function);
 
-    void loadWidgetLimits(QWidget *widget, UAVObjectField *field, int index, bool hasLimits, double sclale);
+    void loadWidgetLimits(QWidget *widget, UAVObjectField *field, int index, bool applyLimits, double scale);
 
     int fieldIndexFromElementName(QString objectName, QString fieldName, QString elementName);
 
@@ -262,6 +260,7 @@ protected:
     virtual void enableControls(bool enable);
     virtual QString mapObjectName(const QString objectName);
     virtual UAVObject *getObject(const QString name, quint32 instId = 0);
+    virtual void buildOptionComboBox(QComboBox *combo, UAVObjectField *field, int index, bool applyLimits);
     void checkWidgetsLimits(QWidget *widget, UAVObjectField *field, int index, bool hasLimits, QVariant value, double scale);
     void updateEnableControls();
 };

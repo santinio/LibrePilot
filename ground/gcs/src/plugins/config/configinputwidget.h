@@ -28,32 +28,33 @@
 #ifndef CONFIGINPUTWIDGET_H
 #define CONFIGINPUTWIDGET_H
 
-#include "ui_input.h"
-#include "ui_input_wizard.h"
-#include "../uavobjectwidgetutils/configtaskwidget.h"
+#include "uavobjectwidgetutils/configtaskwidget.h"
 #include "extensionsystem/pluginmanager.h"
 #include "uavobjectmanager.h"
 #include "uavobject.h"
-#include <QWidget>
-#include <QList>
-#include "inputchannelform.h"
-#include "ui_inputchannelform.h"
-#include <QRadioButton>
+
 #include "manualcontrolcommand.h"
 #include "manualcontrolsettings.h"
 #include "actuatorsettings.h"
 #include "mixersettings.h"
 #include "flightmodesettings.h"
 #include "receiveractivity.h"
-#include <QGraphicsView>
-#include <QtSvg/QSvgRenderer>
-#include <QtSvg/QGraphicsSvgItem>
 #include "flightstatus.h"
 #include "accessorydesired.h"
-#include <QPointer>
 #include "systemsettings.h"
 
+#include <QPointer>
+#include <QWidget>
+#include <QList>
+#include <QTimer>
+
 class Ui_InputWidget;
+class Ui_InputWizardWidget;
+
+class QEventLoop;
+class QSvgRenderer;
+class QGraphicsSvgItem;
+class QGraphicsSimpleTextItem;
 
 class ConfigInputWidget : public ConfigTaskWidget {
     Q_OBJECT
@@ -219,6 +220,7 @@ private slots:
     void dimOtherControls(bool value);
     void moveFMSlider();
     void updatePositionSlider();
+    void updateConfigAlarmStatus();
     void invertControls();
     void simpleCalibration(bool state);
     void adjustSpecialNeutrals();
@@ -229,8 +231,12 @@ private slots:
     void resetActuatorSettings();
     void forceOneFlightMode();
 
+    void failsafeFlightModeChanged(int index);
+    void failsafeFlightModeCbToggled(bool checked);
+
 protected:
     void resizeEvent(QResizeEvent *event);
+    void buildOptionComboBox(QComboBox *combo, UAVObjectField *field, int index, bool applyLimits);
 };
 
 #endif // ifndef CONFIGINPUTWIDGET_H

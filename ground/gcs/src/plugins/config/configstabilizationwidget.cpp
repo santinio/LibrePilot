@@ -27,6 +27,21 @@
  */
 #include "configstabilizationwidget.h"
 
+#include "ui_stabilization.h"
+
+#include <extensionsystem/pluginmanager.h>
+#include <coreplugin/generalsettings.h>
+#include "uavobjectutilmanager.h"
+
+#include "objectpersistence.h"
+#include "altitudeholdsettings.h"
+#include "stabilizationsettings.h"
+
+#include "qwt/src/qwt.h"
+#include "qwt/src/qwt_plot.h"
+#include "qwt/src/qwt_plot_canvas.h"
+#include "qwt/src/qwt_scale_widget.h"
+
 #include <QDebug>
 #include <QStringList>
 #include <QWidget>
@@ -41,16 +56,6 @@
 #include <QToolButton>
 #include <QMenu>
 #include <QAction>
-
-#include <extensionsystem/pluginmanager.h>
-#include <coreplugin/generalsettings.h>
-#include "altitudeholdsettings.h"
-#include "stabilizationsettings.h"
-
-#include "qwt/src/qwt.h"
-#include "qwt/src/qwt_plot.h"
-#include "qwt/src/qwt_plot_canvas.h"
-#include "qwt/src/qwt_scale_widget.h"
 
 ConfigStabilizationWidget::ConfigStabilizationWidget(QWidget *parent) : ConfigTaskWidget(parent),
     boardModel(0), m_stabSettingsBankCount(0), m_currentStabSettingsBank(0)
@@ -107,6 +112,9 @@ ConfigStabilizationWidget::ConfigStabilizationWidget(QWidget *parent) : ConfigTa
     addWidget(ui->pushButton_9);
     addWidget(ui->pushButton_10);
     addWidget(ui->pushButton_11);
+    addWidget(ui->pushButton_12);
+    addWidget(ui->pushButton_13);
+    addWidget(ui->pushButton_14);
     addWidget(ui->pushButton_20);
     addWidget(ui->pushButton_22);
     addWidget(ui->pushButton_23);

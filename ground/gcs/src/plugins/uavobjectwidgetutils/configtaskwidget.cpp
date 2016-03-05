@@ -27,12 +27,24 @@
  */
 #include "configtaskwidget.h"
 
-#include <uavtalk/telemetrymanager.h>
+#include "uavobjectmanager.h"
+#include "uavobject.h"
+#include "uavobjectutilmanager.h"
+#include "uavtalk/telemetrymanager.h"
 #include "uavsettingsimportexport/uavsettingsimportexportfactory.h"
+#include "smartsavebutton.h"
+#include "mixercurvewidget.h"
 
-#include <QWidget>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QDesktopServices>
+#include <QLabel>
 #include <QLineEdit>
+#include <QSpinBox>
+#include <QTableWidget>
 #include <QToolButton>
+#include <QUrl>
+#include <QWidget>
 
 ConfigTaskWidget::ConfigTaskWidget(QWidget *parent) : QWidget(parent), m_currentBoardId(-1), m_isConnected(false), m_isWidgetUpdatesAllowed(true), m_wikiURL("Welcome"),
     m_saveButton(NULL), m_isDirty(false), m_outOfLimitsStyle("background-color: rgb(255, 0, 0);"), m_realtimeUpdateTimer(NULL)
@@ -1041,26 +1053,16 @@ void ConfigTaskWidget::checkWidgetsLimits(QWidget *widget, UAVObjectField *field
     }
 }
 
-void ConfigTaskWidget::loadWidgetLimits(QWidget *widget, UAVObjectField *field, int index, bool hasLimits, double scale)
+void ConfigTaskWidget::loadWidgetLimits(QWidget *widget, UAVObjectField *field, int index, bool applyLimits, double scale)
 {
     if (!widget || !field) {
         return;
     }
     if (QComboBox * cb = qobject_cast<QComboBox *>(widget)) {
         cb->clear();
-        QStringList options = field->getOptions();
-
-        for (int optionIndex = 0; optionIndex < options.count(); optionIndex++) {
-            if (hasLimits) {
-                if (m_currentBoardId > -1 && field->isWithinLimits(options.at(optionIndex), index, m_currentBoardId)) {
-                    cb->addItem(options.at(optionIndex), QVariant(optionIndex));
-                }
-            } else {
-                cb->addItem(options.at(optionIndex), QVariant(optionIndex));
-            }
-        }
+        buildOptionComboBox(cb, field, index, applyLimits);
     }
-    if (!hasLimits) {
+    if (!applyLimits) {
         return;
     } else if (QDoubleSpinBox * cb = qobject_cast<QDoubleSpinBox *>(widget)) {
         if (field->getMaxLimit(index).isValid()) {
@@ -1103,6 +1105,21 @@ void ConfigTaskWidget::updateEnableControls()
     Q_ASSERT(telMngr);
 
     enableControls(telMngr->isConnected());
+}
+
+void ConfigTaskWidget::buildOptionComboBox(QComboBox *combo, UAVObjectField *field, int index, bool applyLimits)
+{
+    QStringList options = field->getOptions();
+
+    for (int optionIndex = 0; optionIndex < options.count(); optionIndex++) {
+        if (applyLimits) {
+            if (m_currentBoardId > -1 && field->isWithinLimits(options.at(optionIndex), index, m_currentBoardId)) {
+                combo->addItem(options.at(optionIndex), QVariant(optionIndex));
+            }
+        } else {
+            combo->addItem(options.at(optionIndex), QVariant(optionIndex));
+        }
+    }
 }
 
 void ConfigTaskWidget::disableMouseWheelEvents()

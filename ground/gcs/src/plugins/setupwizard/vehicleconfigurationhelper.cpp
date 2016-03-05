@@ -27,7 +27,10 @@
  */
 
 #include "vehicleconfigurationhelper.h"
+
 #include "extensionsystem/pluginmanager.h"
+#include "uavobjectutilmanager.h"
+
 #include "hwsettings.h"
 #include "actuatorsettings.h"
 #include "attitudesettings.h"
@@ -42,9 +45,12 @@
 #include "accelgyrosettings.h"
 #include "gpssettings.h"
 #include "airspeedsettings.h"
-#include <QtCore/qmath.h>
-#include <QJsonObject>
 #include "auxmagsettings.h"
+
+#include <QtCore/qmath.h>
+#include <QDebug>
+#include <QJsonObject>
+#include <QTimer>
 
 VehicleConfigurationHelper::VehicleConfigurationHelper(VehicleConfigurationSource *configSource)
     : m_configSource(configSource), m_uavoManager(0),
@@ -254,6 +260,19 @@ void VehicleConfigurationHelper::applyHardwareConfiguration()
                 Q_ASSERT(magSettings);
                 AuxMagSettings::DataFields magsData = magSettings->getData();
                 magsData.Type  = AuxMagSettings::TYPE_GPSV9;
+                magsData.Usage = AuxMagSettings::USAGE_AUXONLY;
+                magSettings->setData(magsData);
+                addModifiedObject(magSettings, tr("Writing External Mag sensor settings"));
+                break;
+            }
+            case VehicleConfigurationSource::GPS_NAZA:
+            {
+                gpsData.DataProtocol  = GPSSettings::DATAPROTOCOL_DJI;
+                gpsData.UbxAutoConfig = GPSSettings::UBXAUTOCONFIG_DISABLED;
+                AuxMagSettings *magSettings = AuxMagSettings::GetInstance(m_uavoManager);
+                Q_ASSERT(magSettings);
+                AuxMagSettings::DataFields magsData = magSettings->getData();
+                magsData.Type  = AuxMagSettings::TYPE_DJI;
                 magsData.Usage = AuxMagSettings::USAGE_AUXONLY;
                 magSettings->setData(magsData);
                 addModifiedObject(magSettings, tr("Writing External Mag sensor settings"));
