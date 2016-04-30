@@ -2,7 +2,7 @@
  ******************************************************************************
  *
  * @file       OSGGeoTransformNode.hpp
- * @author     The LibrePilot Project, http://www.librepilot.org Copyright (C) 2015.
+ * @author     The LibrePilot Project, http://www.librepilot.org Copyright (C) 2016.
  * @addtogroup
  * @{
  * @addtogroup
@@ -29,32 +29,24 @@
 #define _H_OSGQTQUICK_GEOTRANSFORMNODE_H_
 
 #include "Export.hpp"
-#include "OSGNode.hpp"
+#include "OSGGroup.hpp"
 
 #include <QVector3D>
 
-// TODO derive from OSGGroup...
 namespace osgQtQuick {
-class OSGQTQUICK_EXPORT OSGGeoTransformNode : public OSGNode {
-    Q_OBJECT
-    // TODO rename to childNode
-    Q_PROPERTY(osgQtQuick::OSGNode *modelData READ childNode WRITE setChildNode NOTIFY childNodeChanged)
-    // TODO rename to sceneNode
-    Q_PROPERTY(osgQtQuick::OSGNode * sceneData READ sceneNode WRITE setSceneNode NOTIFY sceneNodeChanged)
-
+class OSGQTQUICK_EXPORT OSGGeoTransformNode : public OSGGroup {
+    Q_OBJECT Q_PROPERTY(osgQtQuick::OSGNode *sceneNode READ sceneNode WRITE setSceneNode NOTIFY sceneNodeChanged)
     Q_PROPERTY(bool clampToTerrain READ clampToTerrain WRITE setClampToTerrain NOTIFY clampToTerrainChanged)
     Q_PROPERTY(bool intoTerrain READ intoTerrain NOTIFY intoTerrainChanged)
-
     Q_PROPERTY(QVector3D position READ position WRITE setPosition NOTIFY positionChanged)
+
+    typedef OSGGroup Inherited;
 
 public:
     OSGGeoTransformNode(QObject *parent = 0);
     virtual ~OSGGeoTransformNode();
 
-    OSGNode *childNode();
-    void setChildNode(OSGNode *node);
-
-    OSGNode *sceneNode();
+    OSGNode *sceneNode() const;
     void setSceneNode(OSGNode *node);
 
     bool clampToTerrain() const;
@@ -66,23 +58,18 @@ public:
     void setPosition(QVector3D arg);
 
 signals:
-    void childNodeChanged(OSGNode *node);
-
     void sceneNodeChanged(OSGNode *node);
-
     void clampToTerrainChanged(bool arg);
     void intoTerrainChanged(bool arg);
-
     void positionChanged(QVector3D arg);
+
+protected:
+    virtual osg::Node *createNode();
+    virtual void updateNode();
 
 private:
     struct Hidden;
-    Hidden *h;
-
-    virtual void update();
-
-    virtual void attach(osgViewer::View *view);
-    virtual void detach(osgViewer::View *view);
+    Hidden *const h;
 };
 } // namespace osgQtQuick
 

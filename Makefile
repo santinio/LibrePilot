@@ -78,7 +78,7 @@ endef
 define DESCRIPTION_LONG :=
 The LibrePilot open source project was founded in July 2015.
 It focuses on research and development of software and hardware to be used in a variety of applications including vehicle control and stabilization, unmanned autonomous vehicles and robotics.
-One of the project’s primary goals is to provide an open and collaborative environment making it the ideal home for development of innovative ideas.
+One of the project's primary goals is to provide an open and collaborative environment making it the ideal home for development of innovative ideas.
 endef
 
 
@@ -150,6 +150,9 @@ GCS_BUILD_CONF := release
 
 # Set extra configuration
 GCS_EXTRA_CONF += osg copy_osg
+ifeq ($(UNAME), Windows)
+    GCS_EXTRA_CONF += osgearth
+endif
 
 ##############################
 #
