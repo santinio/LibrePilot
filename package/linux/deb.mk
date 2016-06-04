@@ -9,6 +9,7 @@ endif
 DEB_NAME             := $(ORG_SMALL_NAME)
 DEB_ORIG_SRC         := $(PACKAGE_DIR)/$(DEB_NAME)_$(UPSTREAM_VER).orig.tar.gz
 DEB_ORIG_FW          := $(PACKAGE_DIR)/$(DEB_NAME)_$(UPSTREAM_VER).orig-firmware.tar.gz
+DEB_SRC_CHANGES      := $(PACKAGE_DIR)/$(DEB_NAME)_$(UPSTREAM_VER)-$(DEB_REV)_source.changes
 DEB_PACKAGE_DIR      := $(PACKAGE_DIR)/$(DEB_NAME)-$(UPSTREAM_VER)
 DEB_ARCH             := $(shell dpkg --print-architecture)
 DEB_PACKAGE_NAME     := $(DEB_NAME)_$(UPSTREAM_VER)-$(DEB_REV)_$(DEB_ARCH)
@@ -24,7 +25,6 @@ SED_SCRIPT           := $(SED_SCRIPT)' \
 			'
 
 # Ubuntu 14.04 (Trusty Tahr) use qt in /opt PPA
-OPT_QT               := qt56
 TRUSTY_DEPS_SED      := s/qml-module-.*/$(OPT_QT)quickcontrols/g; \
                         s/qt5-default.*/$(OPT_QT)-meta-minimal, $(OPT_QT)svg, $(OPT_QT)script, $(OPT_QT)serialport, $(OPT_QT)multimedia, $(OPT_QT)translations, $(OPT_QT)tools/g;
 
@@ -37,7 +37,7 @@ package: debian
 	@$(ECHO) "Building Linux package, please wait..."
 	$(V1) sed -i -e "$(PACKAGE_DEPS_SED)" debian/control
 	$(V1) sed -i -e 's,config_new.*, --help > /dev/null,' debian/rules
-	$(V1) dpkg-buildpackage -b -us -uc -nc $(DPKG_BUILDPACKAGE_OPTS)
+	$(V1) dpkg-buildpackage -b -us -uc -nc
 	$(V1) mv $(ROOT_DIR)/../$(DEB_PACKAGE_NAME).deb $(BUILD_DIR)
 	$(V1) mv $(ROOT_DIR)/../$(DEB_PACKAGE_NAME).changes $(BUILD_DIR)
 	$(V1) rm -r debian
@@ -51,13 +51,26 @@ debian: $(DEB_DIR)
 	$(V1) $(SED_SCRIPT) debian/changelog debian/control
 ifeq ($(DEB_DIST), trusty)
 	$(V1) sed -i -e '$(TRUSTY_DEPS_SED)' debian/control
-	$(V1) sed -i -e 's,dh ,source /opt/$(OPT_QT)/bin/$(OPT_QT)-env.sh || true; dh ,' debian/rules
-	$(V1) echo "SHELL := /bin/bash" >> debian/rules
 endif
 
 .PHONY: package_src
-package_src:  $(DEB_ORIG_SRC_NAME) $(DEB_PACKAGE_DIR)
-	$(V1) cd $(DEB_PACKAGE_DIR) && dpkg-buildpackage -S -us -uc $(DPKG_BUILDPACKAGE_OPTS)
+package_src:  $(DEB_SRC_CHANGES)
+
+.PHONY: package_src_upload
+package_src_upload:  $(DEB_SRC_CHANGES)
+	$(V1) debsign $(DEB_SRC_CHANGES)
+	$(V1) dput $(DPUT_URL) $(DEB_SRC_CHANGES)
+
+# Only include the orig if it we haven't alreadly built it,
+# because if we have it is likely to be uploaded already
+ifeq ($(wildcard $(DEB_ORIG_SRC)),)
+DPKG_INCLUDE_ORIG := -sa
+else
+DPKG_INCLUDE_ORIG := -sd
+endif
+
+$(DEB_SRC_CHANGES):  $(DEB_ORIG_SRC_NAME) $(DEB_PACKAGE_DIR)
+	$(V1) cd $(DEB_PACKAGE_DIR) && dpkg-buildpackage -S -us -uc $(DPKG_INCLUDE_ORIG)
 
 $(DEB_ORIG_SRC): $(DIST_TAR_GZ) | $(PACKAGE_DIR)
 	$(V1) cp $(DIST_TAR_GZ) $(DEB_ORIG_SRC)

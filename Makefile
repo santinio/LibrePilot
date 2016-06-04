@@ -106,15 +106,6 @@ $(foreach var, $(SANITIZE_GCC_VARS), $(eval $(call SANITIZE_VAR,$(var),disallowe
 SANITIZE_DEPRECATED_VARS := USE_BOOTLOADER CLEAN_BUILD
 $(foreach var, $(SANITIZE_DEPRECATED_VARS), $(eval $(call SANITIZE_VAR,$(var),deprecated)))
 
-# Make sure this isn't being run as root unless installing (no whoami on Windows, but that is ok here)
-ifeq ($(shell whoami 2>/dev/null),root)
-    ifeq ($(filter install uninstall,$(MAKECMDGOALS)),)
-        ifndef FAKEROOTKEY
-            $(error You should not be running this as root)
-        endif
-    endif
-endif
-
 # Decide on a verbosity level based on the V= parameter
 export AT := @
 ifndef V
@@ -313,7 +304,7 @@ uploader_clean:
 #
 ##############################
 # Firmware files to package
-PACKAGE_FW_TARGETS := fw_coptercontrol fw_oplinkmini fw_revolution fw_osd fw_revoproto fw_gpsplatinum fw_revonano
+PACKAGE_FW_TARGETS := fw_coptercontrol fw_oplinkmini fw_revolution fw_osd fw_revoproto fw_gpsplatinum fw_revonano fw_sparky2
 
 # Rules to generate GCS resources used to embed firmware binaries into the GCS.
 # They are used later by the vehicle setup wizard to update board firmware.
@@ -376,10 +367,12 @@ include $(ROOT_DIR)/package/$(UNAME).mk
 # Source for distribution
 #
 ##############################
-$(DIST_VER_INFO): .git/index | $(DIST_DIR)
+FORCE:
+
+$(DIST_VER_INFO): FORCE | $(DIST_DIR)
 	$(V1) $(VERSION_INFO) --jsonpath="$(DIST_DIR)"
 
-$(DIST_TAR): $(DIST_VER_INFO) .git/index | $(DIST_DIR)
+$(DIST_TAR): $(DIST_VER_INFO) | $(DIST_DIR)
 	@$(ECHO) " SOURCE FOR DISTRIBUTION $(call toprel, $(DIST_TAR))"
 	$(V1) git archive --prefix="$(PACKAGE_NAME)/" -o "$(DIST_TAR)" HEAD
 	$(V1) tar --append --file="$(DIST_TAR)" \
