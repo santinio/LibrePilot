@@ -11,7 +11,8 @@
  * AttitudeDesired object (stabilized mode)
  *
  * @file       manualcontrol.c
- * @author     The OpenPilot Team, http://www.openpilot.org Copyright (C) 2014.
+ * @author     The LibrePilot Project, http://www.librepilot.org Copyright (C) 2016.
+ *             The OpenPilot Team, http://www.openpilot.org Copyright (C) 2014.
  * @brief      ManualControl module. Handles safety R/C link and flight mode.
  *
  * @see        The GNU Public License (GPL) Version 3
@@ -47,7 +48,7 @@
 #include <stabilizationsettings.h>
 #ifndef PIOS_EXCLUDE_ADVANCED_FEATURES
 #include <vtolpathfollowersettings.h>
-#endif
+#endif /* ifndef PIOS_EXCLUDE_ADVANCED_FEATURES */
 
 // Private constants
 #if defined(PIOS_MANUAL_STACK_SIZE)
@@ -63,7 +64,7 @@
 #define ASSISTEDCONTROL_BRAKETHRUST_DEADBAND_FACTOR_LO 0.96f
 #define ASSISTEDCONTROL_BRAKETHRUST_DEADBAND_FACTOR_HI 1.04f
 
-#define ALWAYSTABILIZEACCESSORY_THRESHOLD              0.50f
+#define ALWAYSTABILIZEACCESSORY_THRESHOLD              0.05f
 
 // defined handlers
 
@@ -118,7 +119,7 @@ static void commandUpdatedCb(UAVObjEvent *ev);
 static void manualControlTask(void);
 #ifndef PIOS_EXCLUDE_ADVANCED_FEATURES
 static uint8_t isAssistedFlightMode(uint8_t position, uint8_t flightMode, FlightModeSettingsData *modeSettings);
-#endif
+#endif /* ifndef PIOS_EXCLUDE_ADVANCED_FEATURES */
 static void SettingsUpdatedCb(UAVObjEvent *ev);
 
 #define assumptions (assumptions1 && assumptions2 && assumptions3 && assumptions4 && assumptions5 && assumptions6 && assumptions7 && assumptions_flightmode)
@@ -146,8 +147,8 @@ int32_t ManualControlStart()
 
 #ifndef PIOS_EXCLUDE_ADVANCED_FEATURES
     takeOffLocationHandlerInit();
+#endif /* ifndef PIOS_EXCLUDE_ADVANCED_FEATURES */
 
-#endif
     // Start main task
     PIOS_CALLBACKSCHEDULER_Dispatch(callbackHandle);
 
@@ -174,7 +175,7 @@ int32_t ManualControlInitialize()
     VtolPathFollowerSettingsInitialize();
     VtolPathFollowerSettingsConnectCallback(&SettingsUpdatedCb);
     SystemSettingsConnectCallback(&SettingsUpdatedCb);
-#endif
+#endif /* ifndef PIOS_EXCLUDE_ADVANCED_FEATURES */
     callbackHandle = PIOS_CALLBACKSCHEDULER_Create(&manualControlTask, CALLBACK_PRIORITY, CBTASK_PRIORITY, CALLBACKINFO_RUNNING_MANUALCONTROL, STACK_SIZE_BYTES);
 
     return 0;
@@ -202,7 +203,7 @@ static void SettingsUpdatedCb(__attribute__((unused)) UAVObjEvent *ev)
             break;
         }
     }
-#endif
+#endif /* ifndef PIOS_EXCLUDE_ADVANCED_FEATURES */
 }
 
 /**
@@ -214,7 +215,7 @@ static void manualControlTask(void)
     armHandler(false, frameType);
 #ifndef PIOS_EXCLUDE_ADVANCED_FEATURES
     takeOffLocationHandler();
-#endif
+#endif /* ifndef PIOS_EXCLUDE_ADVANCED_FEATURES */
     // Process flight mode
     FlightStatusData flightStatus;
 
@@ -225,19 +226,27 @@ static void manualControlTask(void)
 #ifndef PIOS_EXCLUDE_ADVANCED_FEATURES
     VtolPathFollowerSettingsThrustLimitsData thrustLimits;
     VtolPathFollowerSettingsThrustLimitsGet(&thrustLimits);
-#endif
+#endif /* ifndef PIOS_EXCLUDE_ADVANCED_FEATURES */
 
     FlightModeSettingsData modeSettings;
     FlightModeSettingsGet(&modeSettings);
 
+    static uint8_t lastPosition      = 0;
     uint8_t position = cmd.FlightModeSwitchPosition;
-    uint8_t newMode  = flightStatus.FlightMode;
+    uint8_t newMode = flightStatus.FlightMode;
     uint8_t newAlwaysStabilized      = flightStatus.AlwaysStabilizeWhenArmed;
     uint8_t newFlightModeAssist      = flightStatus.FlightModeAssist;
     uint8_t newAssistedControlState  = flightStatus.AssistedControlState;
     uint8_t newAssistedThrottleState = flightStatus.AssistedThrottleState;
     if (position < FLIGHTMODESETTINGS_FLIGHTMODEPOSITION_NUMELEM) {
         newMode = modeSettings.FlightModePosition[position];
+    }
+
+    // Ignore change to AutoTakeOff and keep last flight mode position
+    // if vehicle is already armed and maybe in air...
+    if ((newMode == FLIGHTSTATUS_FLIGHTMODE_AUTOTAKEOFF) && flightStatus.Armed) {
+        newMode  = flightStatus.FlightMode;
+        position = lastPosition;
     }
 
     // if a mode change occurs we default the assist mode and states here
@@ -265,6 +274,9 @@ static void manualControlTask(void)
     case FLIGHTSTATUS_FLIGHTMODE_STABILIZED4:
     case FLIGHTSTATUS_FLIGHTMODE_STABILIZED5:
     case FLIGHTSTATUS_FLIGHTMODE_STABILIZED6:
+#if !defined(PIOS_EXCLUDE_ADVANCED_FEATURES)
+    case FLIGHTSTATUS_FLIGHTMODE_AUTOTUNE:
+#endif /* ifndef PIOS_EXCLUDE_ADVANCED_FEATURES */
         handler = &handler_STABILIZED;
 
 #ifndef PIOS_EXCLUDE_ADVANCED_FEATURES
@@ -277,7 +289,6 @@ static void manualControlTask(void)
             newAssistedControlState  = FLIGHTSTATUS_ASSISTEDCONTROLSTATE_PRIMARY;
             newAssistedThrottleState = FLIGHTSTATUS_ASSISTEDTHROTTLESTATE_MANUAL;
         }
-
 
         if (newFlightModeAssist) {
             // assess roll/pitch state
@@ -507,6 +518,7 @@ static void manualControlTask(void)
         flightStatus.AssistedThrottleState    = newAssistedThrottleState;
         FlightStatusSet(&flightStatus);
         newinit = true;
+        lastPosition = position;
     }
     if (handler->handler) {
         handler->handler(newinit);
@@ -530,22 +542,21 @@ static void commandUpdatedCb(__attribute__((unused)) UAVObjEvent *ev)
 }
 
 
+#if !defined(PIOS_EXCLUDE_ADVANCED_FEATURES)
 /**
  * Check and set modes for gps assisted stablised flight modes
  */
-#ifndef PIOS_EXCLUDE_ADVANCED_FEATURES
 static uint8_t isAssistedFlightMode(uint8_t position, uint8_t flightMode, FlightModeSettingsData *modeSettings)
 {
-    uint8_t flightModeAssistOption = STABILIZATIONSETTINGS_FLIGHTMODEASSISTMAP_NONE;
-    uint8_t isAssistedFlag = FLIGHTSTATUS_FLIGHTMODEASSIST_NONE;
     StabilizationSettingsFlightModeAssistMapOptions FlightModeAssistMap[STABILIZATIONSETTINGS_FLIGHTMODEASSISTMAP_NUMELEM];
 
     StabilizationSettingsFlightModeAssistMapGet(FlightModeAssistMap);
-    if (position < STABILIZATIONSETTINGS_FLIGHTMODEASSISTMAP_NUMELEM) {
-        flightModeAssistOption = FlightModeAssistMap[position];
+    if (flightMode == FLIGHTSTATUS_FLIGHTMODE_AUTOTUNE
+        || position >= STABILIZATIONSETTINGS_FLIGHTMODEASSISTMAP_NUMELEM) {
+        return FLIGHTSTATUS_FLIGHTMODEASSIST_NONE;
     }
 
-    switch (flightModeAssistOption) {
+    switch (FlightModeAssistMap[position]) {
     case STABILIZATIONSETTINGS_FLIGHTMODEASSISTMAP_NONE:
         break;
     case STABILIZATIONSETTINGS_FLIGHTMODEASSISTMAP_GPSASSIST:
@@ -592,22 +603,22 @@ static uint8_t isAssistedFlightMode(uint8_t position, uint8_t flightMode, Flight
         case FLIGHTMODESETTINGS_STABILIZATION1SETTINGS_ALTITUDEHOLD:
         case FLIGHTMODESETTINGS_STABILIZATION1SETTINGS_ALTITUDEVARIO:
             // this is only for use with stabi mods with althold/vario.
-            isAssistedFlag = FLIGHTSTATUS_FLIGHTMODEASSIST_GPSASSIST_PRIMARYTHRUST;
-            break;
+            return FLIGHTSTATUS_FLIGHTMODEASSIST_GPSASSIST_PRIMARYTHRUST;
+
         case FLIGHTMODESETTINGS_STABILIZATION1SETTINGS_MANUAL:
         case FLIGHTMODESETTINGS_STABILIZATION1SETTINGS_CRUISECONTROL:
         default:
             // this is the default for non stabi modes also
-            isAssistedFlag = FLIGHTSTATUS_FLIGHTMODEASSIST_GPSASSIST;
-            break;
+            return FLIGHTSTATUS_FLIGHTMODEASSIST_GPSASSIST;
         }
     }
     break;
     }
 
-    return isAssistedFlag;
+    // return isAssistedFlag;
+    return FLIGHTSTATUS_FLIGHTMODEASSIST_NONE;
 }
-#endif /* ifndef PIOS_EXCLUDE_ADVANCED_FEATURES */
+#endif /* !defined(PIOS_EXCLUDE_ADVANCED_FEATURES) */
 
 /**
  * @}

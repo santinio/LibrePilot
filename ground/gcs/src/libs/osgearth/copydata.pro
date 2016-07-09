@@ -2,7 +2,7 @@
 # copy osg and osgearth libraries and data to build dir
 #
 
-OSG_VERSION = 3.5.1
+OSG_VERSION = 3.5.3
 
 contains(QT_ARCH, x86_64)  {
     LIB_DIR_NAME = lib64
@@ -56,8 +56,8 @@ osg:win32 {
         libp11-kit-0.dll \
         libffi-6.dll \
         libtasn1-6.dll \
-        libhogweed-4-1.dll \
-        libnettle-6-1.dll \
+        libhogweed-4-2.dll \
+        libnettle-6-2.dll \
         libssh2-1.dll \
         libnghttp2-14.dll
 
@@ -209,6 +209,7 @@ osgearth:win32 {
         mingw_osgdb_osgearth_engine_mp$${DS}.dll \
         mingw_osgdb_osgearth_sky_simple$${DS}.dll \
         mingw_osgdb_osgearth_tms$${DS}.dll \
+        mingw_osgdb_osgearth_xyz$${DS}.dll \
         mingw_osgdb_osgearth_cache_filesystem$${DS}.dll
 
     osgearth_extra:OSGEARTH_PLUGINS += \
