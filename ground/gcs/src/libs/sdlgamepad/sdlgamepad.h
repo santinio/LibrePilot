@@ -166,6 +166,7 @@ public:
      */
     qint16 getAxes();
 
+
     /**
      * Getter method for the button count.
      *
@@ -221,6 +222,9 @@ public slots:
      */
     bool setGamepad(qint16 index);
 
+    bool refresh(void);
+    void setName(char*);
+    char *getName(void);
 private:
 
     /**
@@ -247,6 +251,7 @@ private:
      */
     void updateButtons();
 
+    char* gamepadName;
     /**
      * Variable to control thread.
      *
@@ -347,6 +352,11 @@ signals:
      * @param values A QListInt16 Type containing all axes values.
      */
     void axesValues(QListInt16 values);
+
+    /**
+      * A signal that emmits the name of the gamepad, if there is a name
+      * */
+    void gamepadNameSet(QString name);
 };
 
 #endif // SDLGAMEPAD_H

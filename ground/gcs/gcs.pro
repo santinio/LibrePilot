@@ -19,7 +19,7 @@ lessThan(QT_VER_MAJ, 5) | lessThan(QT_VER_MIN, 2) {
 macx {
     # This ensures that code is compiled with the /usr/bin version of gcc instead
     # of the gcc in XCode.app/Context/Development
-    QMAKE_CC = /usr/bin/gcc
+    QMAKE_CC = ccache /usr/bin/gcc
     QMAKE_CXX = ccache /usr/bin/g++ 
     QMAKE_LINK = /usr/bin/g++
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6

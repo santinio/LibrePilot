@@ -59,6 +59,9 @@ public:
     QWidget *createPage(QWidget *parent);
     void apply();
     void finish();
+    void setGamepadName(QString info);
+
+
 
 private:
     Ui::GCSControlGadgetOptionsPage *options_page;
@@ -77,6 +80,7 @@ protected slots:
     void gamepads(quint8 count);
     void buttonState(ButtonNumber number, bool pressed);
     void axesValues(QListInt16 values);
+    void gamepadNameSet(QString name);
     void updateButtonFunction();
     void updateButtonAction(int controlID);
     void updateButtonAction_0(void)
@@ -111,6 +115,8 @@ protected slots:
     {
         updateButtonAction(7);
     };
+private slots:
+    void on_refreshGamepadButton_clicked();
 };
 
 #endif // GCSCONTROLGADGETOPTIONSPAGE_H

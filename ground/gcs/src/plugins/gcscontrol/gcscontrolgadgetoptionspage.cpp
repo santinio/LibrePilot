@@ -73,6 +73,11 @@ void GCSControlGadgetOptionsPage::gamepads(quint8 count)
        }*/
 }
 
+void GCSControlGadgetOptionsPage::setGamepadName(QString name)
+{
+    options_page->joystickName->setText(name);
+}
+
 void GCSControlGadgetOptionsPage::axesValues(QListInt16 values)
 {
     if (options_page) {
@@ -213,6 +218,9 @@ QWidget *GCSControlGadgetOptionsPage::createPage(QWidget *parent)
     connect(sdlGamepad, SIGNAL(buttonState(ButtonNumber, bool)), this, SLOT(buttonState(ButtonNumber, bool)));
     connect(sdlGamepad, SIGNAL(gamepads(quint8)), this, SLOT(gamepads(quint8)));
 
+    //connect(sdlGamepad, SIGNAL(gamepadNameSet(QString)),this,SLOT(setGamepadName(QString)));
+    options_page->joystickName->setText(sdlGamepad->getName());
+
     return optionsPageWidget;
 }
 
@@ -327,6 +335,7 @@ void GCSControlGadgetOptionsPage::updateButtonFunction()
             buttonValueList.at(i)->setMinimum(1);
             buttonValueList.at(i)->setMaximum(6);
             buttonValueList.at(i)->setDecimals(0);
+            buttonLabelList.at(i)->setText("to");
 
         } else {
 
@@ -411,4 +420,9 @@ void GCSControlGadgetOptionsPage::updateButtonAction(int controlID)
             connect(buttonFunctionList.at(i), SIGNAL(currentIndexChanged(int)), this, SLOT(updateButtonFunction()));
         }
     }
+}
+
+void GCSControlGadgetOptionsPage::on_refreshGamepadButton_clicked()
+{
+
 }

@@ -24,6 +24,7 @@
 #include <SDL/SDL.h>
 // #undef main
 
+char *testname = "No gamepad";
 class SDLGamepadPrivate {
 public:
     SDLGamepadPrivate() : gamepad(0)
@@ -45,6 +46,7 @@ SDLGamepad::SDLGamepad()
     index   = -1;
     loop    = false;
     tick    = MIN_RATE;
+    gamepadName    = NULL;
     priv    = new SDLGamepadPrivate;
 }
 
@@ -65,12 +67,20 @@ SDLGamepad::~SDLGamepad()
 /**********************************************************************/
 bool SDLGamepad::init()
 {
+    uint numberOfJoysticks=0;
     if (SDL_Init(SDL_INIT_JOYSTICK) < 0) {
+        setName(testname);
+        //emit gamepadName("Nothing there.");
         return false;
     }
 
+    numberOfJoysticks = SDL_NumJoysticks();
     if (SDL_NumJoysticks() > 0) {
+        setName((char*)SDL_JoystickName(0));
+        //name = (char*)calloc(1,strlen(SDL_JoystickName(0)));
+        //strcpy(name,SDL_JoystickName(0));
         emit gamepads(SDL_NumJoysticks());
+        //emit gamepadName(QString::fromStdString((char*)name));
 
         if (!setGamepad(0)) {
             return false;
@@ -80,12 +90,15 @@ bool SDLGamepad::init()
             buttonStates.append(0);
         }
     } else {
+        setName(testname);
+        emit gamepadNameSet(QString::fromStdString(getName()));
         return false;
     }
 
     loop = true;
     return true;
 }
+
 
 /**********************************************************************/
 void SDLGamepad::run()
@@ -95,6 +108,15 @@ void SDLGamepad::run()
         updateButtons();
         msleep(tick);
     }
+}
+
+/**********************************************************************/
+bool SDLGamepad::refresh()
+{
+    /*Here we need to stop any gamepad operations, clear the list of devices,
+     * initialise and emit the data to Qt
+     */
+    return false;
 }
 
 /**********************************************************************/
@@ -196,4 +218,25 @@ qint16 SDLGamepad::getAxes()
 qint16 SDLGamepad::getButtons()
 {
     return buttons;
+}
+
+void SDLGamepad::setName(char* name)
+{
+    if(name)
+    {
+        gamepadName = (char*)calloc(1,strlen(name));
+        strcpy(gamepadName,name);
+    }
+}
+
+char *SDLGamepad::getName(void)
+{
+    if(gamepadName)
+    {
+        return gamepadName;
+    }
+    else
+    {
+        return NULL;
+    }
 }
